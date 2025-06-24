@@ -26,7 +26,6 @@ import { AuthContext, AuthProvider } from './context/AuthContext.jsx';
 import { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { WishlistProvider } from './context/WishlistContext.jsx';
-import { CategoryProvider } from './context/CategoryContext.jsx';
 import { NotificationProvider } from './context/NotificationContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 
@@ -49,57 +48,55 @@ function ProtectedRoute({ children, allowedRoles }) {
 function App() {
   return (
     <NotificationProvider>
-      <CategoryProvider>
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-                <Notification />
-                <Header />
-                <main className="flex-grow">
-                  <Routes>
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/products" element={<ProductListingPage />} />
-                    <Route path="/products/:id" element={<ProductDetailsPage />} />
-                    <Route path="/categories" element={<CategoriesPage />} />
-                    <Route path="/categories/:id" element={<CategoryPage />} />
-                    <Route path="/cart" element={<CartPage />} />
-                    <Route path="/wishlist" element={<WishlistPage />} />
-                    <Route path="/contact" element={<ContactUsPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-                    <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
-                    <Route path="/change-password" element={<ChangePasswordPage />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                    <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
-                    <Route path="/disclaimer" element={<DisclaimerPage />} />
-                    <Route
-                      path="/profile"
-                      element={
-                        <ProtectedRoute allowedRoles={['user', 'staff', 'admin']}>
-                          <ProfilePage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin"
-                      element={
-                        <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                          <AdminDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route path="*" element={<NotFoundPage />} />
-                  </Routes>
-                </main>
-                <Footer />
-              </div>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
-      </CategoryProvider>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+              <Notification />
+              <Header />
+              <main className="flex-grow">
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/products" element={<ProductListingPage />} />
+                  <Route path="/products/:id" element={<ProductDetailsPage />} />
+                  <Route path="/categories" element={<CategoriesPage />} />
+                  <Route path="/categories/:id" element={<CategoryPage />} />
+                  <Route path="/cart" element={<CartPage />} />
+                  <Route path="/wishlist" element={<WishlistPage />} />
+                  <Route path="/contact" element={<ContactUsPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+                  <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+                  <Route path="/change-password" element={<ChangePasswordPage />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                  <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
+                  <Route path="/disclaimer" element={<DisclaimerPage />} />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute allowedRoles={['user', 'staff', 'admin']}>
+                        <ProfilePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
     </NotificationProvider>
   );
 }
