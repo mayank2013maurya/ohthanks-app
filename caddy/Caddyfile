@@ -1,12 +1,8 @@
-{
-    local_certs
-}
-
-auth.localhost {
+ohthanks.in {
     encode gzip
     reverse_proxy frontend:5173
 }
 
-api.auth.localhost {
+api.ohthanks.in {
     reverse_proxy api:5000
 }
