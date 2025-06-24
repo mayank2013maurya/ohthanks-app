@@ -1,14 +1,33 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from './AuthContext';
-import { useNotifications, handleApiError, NOTIFICATION_MESSAGES } from '../utils/notificationUtils';
+import { handleApiError, NOTIFICATION_MESSAGES } from '../utils/notificationUtils';
 
 export const WishlistContext = createContext();
 
-export const WishlistProvider = ({ children }) => {
+export const WishlistProvider = ({ children, notificationFunctions = null }) => {
   const [wishlist, setWishlist] = useState([]);
   const { user } = useContext(AuthContext);
-  const { showSuccess, showError, showLoading, removeNotification } = useNotifications();
+
+  // Helper function to safely call notification functions
+  const notify = (type, message, title) => {
+    if (notificationFunctions && notificationFunctions[type]) {
+      notificationFunctions[type](message, title);
+    }
+  };
+
+  const showLoading = (message) => {
+    if (notificationFunctions?.showLoading) {
+      return notificationFunctions.showLoading(message);
+    }
+    return null;
+  };
+
+  const removeNotification = (id) => {
+    if (notificationFunctions?.removeNotification && id) {
+      notificationFunctions.removeNotification(id);
+    }
+  };
 
   useEffect(() => {
     const syncWishlist = async () => {
@@ -22,10 +41,10 @@ export const WishlistProvider = ({ children }) => {
               headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             });
             localStorage.removeItem('wishlist');
-            showSuccess('Your guest wishlist has been merged.');
+            notify('showSuccess', 'Your guest wishlist has been merged.');
           } catch (error) {
             console.error('Error syncing wishlist:', error);
-            showError('Failed to sync local wishlist.');
+            notify('showError', 'Failed to sync local wishlist.');
           }
         }
         
@@ -37,7 +56,7 @@ export const WishlistProvider = ({ children }) => {
           setWishlist(response.data);
         } catch (error) {
           console.error('Error fetching wishlist:', error);
-          showError('Failed to load wishlist');
+          notify('showError', 'Failed to load wishlist');
         }
       } else {
         // Use localStorage for guest users
@@ -70,10 +89,10 @@ export const WishlistProvider = ({ children }) => {
       }
       
       removeNotification(loadingId);
-      showSuccess(NOTIFICATION_MESSAGES.PRODUCT_ADDED_TO_WISHLIST);
+      notify('showSuccess', NOTIFICATION_MESSAGES.PRODUCT_ADDED_TO_WISHLIST);
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
   };
@@ -97,10 +116,10 @@ export const WishlistProvider = ({ children }) => {
       }
       
       removeNotification(loadingId);
-      showSuccess(NOTIFICATION_MESSAGES.PRODUCT_REMOVED_FROM_WISHLIST);
+      notify('showSuccess', NOTIFICATION_MESSAGES.PRODUCT_REMOVED_FROM_WISHLIST);
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
   };
@@ -120,10 +139,10 @@ export const WishlistProvider = ({ children }) => {
       }
       
       removeNotification(loadingId);
-      showSuccess('Wishlist cleared successfully');
+      notify('showSuccess', 'Wishlist cleared successfully');
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
   };

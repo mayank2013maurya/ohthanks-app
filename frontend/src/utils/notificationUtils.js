@@ -1,13 +1,36 @@
 import { useContext } from 'react';
 import { NotificationContext } from '../context/NotificationContext.jsx';
 
-// Custom hook to use notifications
+// Custom hook to use notifications - only use this in components, not in context providers
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (!context) {
     throw new Error('useNotifications must be used within a NotificationProvider');
   }
   return context;
+};
+
+// Safe notification functions that can be used in context providers
+export const createNotificationHelpers = (notificationContext) => {
+  if (!notificationContext) {
+    return {
+      showSuccess: () => {},
+      showError: () => {},
+      showWarning: () => {},
+      showInfo: () => {},
+      showLoading: () => null,
+      removeNotification: () => {},
+    };
+  }
+
+  return {
+    showSuccess: notificationContext.showSuccess,
+    showError: notificationContext.showError,
+    showWarning: notificationContext.showWarning,
+    showInfo: notificationContext.showInfo,
+    showLoading: notificationContext.showLoading,
+    removeNotification: notificationContext.removeNotification,
+  };
 };
 
 // Utility function to handle API errors

@@ -1,14 +1,33 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from './AuthContext.jsx';
-import { useNotifications, handleApiError, NOTIFICATION_MESSAGES } from '../utils/notificationUtils';
+import { handleApiError, NOTIFICATION_MESSAGES } from '../utils/notificationUtils';
 
 export const CartContext = createContext();
 
-export const CartProvider = ({ children }) => {
+export const CartProvider = ({ children, notificationFunctions = null }) => {
   const [cart, setCart] = useState([]);
   const { user } = useContext(AuthContext);
-  const { showSuccess, showError, showLoading, removeNotification } = useNotifications();
+
+  // Helper function to safely call notification functions
+  const notify = (type, message, title) => {
+    if (notificationFunctions && notificationFunctions[type]) {
+      notificationFunctions[type](message, title);
+    }
+  };
+
+  const showLoading = (message) => {
+    if (notificationFunctions?.showLoading) {
+      return notificationFunctions.showLoading(message);
+    }
+    return null;
+  };
+
+  const removeNotification = (id) => {
+    if (notificationFunctions?.removeNotification && id) {
+      notificationFunctions.removeNotification(id);
+    }
+  };
 
   const fetchFullProducts = async (productIds) => {
     try {
@@ -21,7 +40,7 @@ export const CartProvider = ({ children }) => {
       return products;
     } catch (error) {
       console.error('Error fetching full products:', error);
-      showError('Failed to load cart items');
+      notify('showError', 'Failed to load cart items');
       return [];
     }
   };
@@ -35,7 +54,7 @@ export const CartProvider = ({ children }) => {
         .then(response => setCart(response.data))
         .catch(error => {
           console.error('Error fetching cart:', error);
-          showError('Failed to load cart');
+          notify('showError', 'Failed to load cart');
         });
 
       // Sync localStorage cart to backend
@@ -47,11 +66,11 @@ export const CartProvider = ({ children }) => {
           .then(response => {
             setCart(response.data);
             localStorage.removeItem('cart');
-            showSuccess('Cart synced successfully');
+            notify('showSuccess', 'Cart synced successfully');
           })
           .catch(error => {
             console.error('Error syncing cart:', error);
-            showError('Failed to sync cart');
+            notify('showError', 'Failed to sync cart');
           });
       }
     } else {
@@ -88,10 +107,10 @@ export const CartProvider = ({ children }) => {
       }
       
       removeNotification(loadingId);
-      showSuccess(NOTIFICATION_MESSAGES.PRODUCT_ADDED_TO_CART);
+      notify('showSuccess', NOTIFICATION_MESSAGES.PRODUCT_ADDED_TO_CART);
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
   };
@@ -120,10 +139,10 @@ export const CartProvider = ({ children }) => {
       }
       
       removeNotification(loadingId);
-      showSuccess(NOTIFICATION_MESSAGES.PRODUCT_REMOVED_FROM_CART);
+      notify('showSuccess', NOTIFICATION_MESSAGES.PRODUCT_REMOVED_FROM_CART);
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
   };
@@ -143,10 +162,10 @@ export const CartProvider = ({ children }) => {
       }
       
       removeNotification(loadingId);
-      showSuccess(NOTIFICATION_MESSAGES.CART_CLEARED);
+      notify('showSuccess', NOTIFICATION_MESSAGES.CART_CLEARED);
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
   };

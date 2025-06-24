@@ -1,13 +1,32 @@
 import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
-import { useNotifications, handleApiError, NOTIFICATION_MESSAGES } from '../utils/notificationUtils';
+import { handleApiError, NOTIFICATION_MESSAGES } from '../utils/notificationUtils';
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children, notificationFunctions = null }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { showSuccess, showError, showLoading, removeNotification } = useNotifications();
+
+  // Helper function to safely call notification functions
+  const notify = useCallback((type, message, title) => {
+    if (notificationFunctions && notificationFunctions[type]) {
+      notificationFunctions[type](message, title);
+    }
+  }, [notificationFunctions]);
+
+  const showLoading = useCallback((message) => {
+    if (notificationFunctions?.showLoading) {
+      return notificationFunctions.showLoading(message);
+    }
+    return null;
+  }, [notificationFunctions]);
+
+  const removeNotification = useCallback((id) => {
+    if (notificationFunctions?.removeNotification && id) {
+      notificationFunctions.removeNotification(id);
+    }
+  }, [notificationFunctions]);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -40,29 +59,29 @@ export const AuthProvider = ({ children }) => {
       // Check if user needs email verification
       if (response.data.requiresVerification) {
         removeNotification(loadingId);
-        showError('Please verify your email before logging in. Check your inbox for a verification link.');
+        notify('showError', 'Please verify your email before logging in. Check your inbox for a verification link.');
         throw new Error('Email verification required');
       }
       
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       removeNotification(loadingId);
-      showSuccess(NOTIFICATION_MESSAGES.LOGIN_SUCCESS);
+      notify('showSuccess', NOTIFICATION_MESSAGES.LOGIN_SUCCESS);
       return response.data;
     } catch (error) {
       removeNotification(loadingId);
       
       // Check if it's an email verification error (401 status)
       if (error.response && error.response.status === 401 && error.response.data && error.response.data.requiresVerification) {
-        showError('Please verify your email before logging in. Check your inbox for a verification link.');
+        notify('showError', 'Please verify your email before logging in. Check your inbox for a verification link.');
         throw new Error('Email verification required');
       }
       
       // Handle other errors
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
-  }, [showLoading, removeNotification, showError]);
+  }, [showLoading, removeNotification, notify]);
 
   const register = useCallback(async (name, email, whatsappNumber, password) => {
     const loadingId = showLoading('Creating account...');
@@ -79,21 +98,21 @@ export const AuthProvider = ({ children }) => {
       
       // Check if verification is required
       if (response.data.requiresVerification) {
-        showSuccess('Registration successful! Please check your email to verify your account.');
+        notify('showSuccess', 'Registration successful! Please check your email to verify your account.');
         return { requiresVerification: true, email };
       }
       
       // If no verification required (shouldn't happen with new system)
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
-      showSuccess(NOTIFICATION_MESSAGES.REGISTER_SUCCESS);
+      notify('showSuccess', NOTIFICATION_MESSAGES.REGISTER_SUCCESS);
       return response.data;
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
-  }, [showLoading, removeNotification, showSuccess, showError]);
+  }, [showLoading, removeNotification, notify]);
 
   const verifyEmail = useCallback(async (token) => {
     const loadingId = showLoading('Verifying email...');
@@ -101,14 +120,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_REACT_API_URL}/api/auth/verify-email/${token}`);
       removeNotification(loadingId);
-      showSuccess('Email verified successfully! You can now log in.');
+      notify('showSuccess', 'Email verified successfully! You can now log in.');
       return response.data;
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
-  }, [showLoading, removeNotification, showSuccess, showError]);
+  }, [showLoading, removeNotification, notify]);
 
   const resendVerification = useCallback(async (email) => {
     const loadingId = showLoading('Sending verification email...');
@@ -116,19 +135,19 @@ export const AuthProvider = ({ children }) => {
     try {
       await axios.post(`${import.meta.env.VITE_REACT_API_URL}/api/auth/resend-verification`, { email });
       removeNotification(loadingId);
-      showSuccess('Verification email sent successfully! Please check your inbox.');
+      notify('showSuccess', 'Verification email sent successfully! Please check your inbox.');
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
-  }, [showLoading, removeNotification, showSuccess, showError]);
+  }, [showLoading, removeNotification, notify]);
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     setUser(null);
-    showSuccess(NOTIFICATION_MESSAGES.LOGOUT_SUCCESS);
-  }, [showSuccess]);
+    notify('showSuccess', NOTIFICATION_MESSAGES.LOGOUT_SUCCESS);
+  }, [notify]);
 
   const forgotPassword = useCallback(async (email) => {
     const loadingId = showLoading('Sending reset email...');
@@ -136,13 +155,13 @@ export const AuthProvider = ({ children }) => {
     try {
       await axios.post(`${import.meta.env.VITE_REACT_API_URL}/api/auth/forgot-password`, { email });
       removeNotification(loadingId);
-      showSuccess(NOTIFICATION_MESSAGES.PASSWORD_RESET_SENT);
+      notify('showSuccess', NOTIFICATION_MESSAGES.PASSWORD_RESET_SENT);
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
-  }, [showLoading, removeNotification, showSuccess, showError]);
+  }, [showLoading, removeNotification, notify]);
 
   const resetPassword = useCallback(async (token, password) => {
     const loadingId = showLoading('Resetting password...');
@@ -150,13 +169,13 @@ export const AuthProvider = ({ children }) => {
     try {
       await axios.post(`${import.meta.env.VITE_REACT_API_URL}/api/auth/reset-password`, { token, password });
       removeNotification(loadingId);
-      showSuccess(NOTIFICATION_MESSAGES.PASSWORD_RESET_SUCCESS);
+      notify('showSuccess', NOTIFICATION_MESSAGES.PASSWORD_RESET_SUCCESS);
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
-  }, [showLoading, removeNotification, showSuccess, showError]);
+  }, [showLoading, removeNotification, notify]);
 
   const changePassword = useCallback(async (oldPassword, newPassword) => {
     const loadingId = showLoading('Changing password...');
@@ -168,13 +187,13 @@ export const AuthProvider = ({ children }) => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       removeNotification(loadingId);
-      showSuccess(NOTIFICATION_MESSAGES.PASSWORD_CHANGED);
+      notify('showSuccess', NOTIFICATION_MESSAGES.PASSWORD_CHANGED);
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
-  }, [showLoading, removeNotification, showSuccess, showError]);
+  }, [showLoading, removeNotification, notify]);
 
   const updateProfile = useCallback(async (profileData) => {
     const loadingId = showLoading('Updating profile...');
@@ -187,14 +206,14 @@ export const AuthProvider = ({ children }) => {
       );
       setUser(response.data);
       removeNotification(loadingId);
-      showSuccess(NOTIFICATION_MESSAGES.PROFILE_UPDATED);
+      notify('showSuccess', NOTIFICATION_MESSAGES.PROFILE_UPDATED);
       return response.data;
     } catch (error) {
       removeNotification(loadingId);
-      handleApiError(error, { showError });
+      handleApiError(error, { showError: (msg, title) => notify('showError', msg, title) });
       throw error;
     }
-  }, [showLoading, removeNotification, showSuccess, showError]);
+  }, [showLoading, removeNotification, notify]);
 
   return (
     <AuthContext.Provider value={{ 
