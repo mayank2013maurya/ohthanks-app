@@ -28,7 +28,7 @@ import { Navigate } from 'react-router-dom';
 import { WishlistProvider } from './context/WishlistContext.jsx';
 import { NotificationContext, NotificationProvider } from './context/NotificationContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
-import { createNotificationHelpers } from './utils/notificationUtils.js';
+import * as notificationUtils from './utils/notificationUtils.js';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useContext(AuthContext);
@@ -48,7 +48,7 @@ function ProtectedRoute({ children, allowedRoles }) {
 
 function AppContent() {
   const notificationContext = useContext(NotificationContext);
-  const notificationHelpers = createNotificationHelpers(notificationContext);
+  const notificationHelpers = notificationUtils.createNotificationHelpers(notificationContext);
   
   return (
     <AuthProvider notificationFunctions={notificationHelpers}>
