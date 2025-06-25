@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { Link } from 'react-router-dom';
-import { useNotifications } from '../utils/notificationUtils';
+import { useNotifications } from '../hooks/useNotifications';
 
 function ForgotPasswordPage() {
   const { forgotPassword } = useContext(AuthContext);

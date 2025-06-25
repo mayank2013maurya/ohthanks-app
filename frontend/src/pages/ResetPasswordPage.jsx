@@ -2,7 +2,7 @@ import { useContext, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useNotifications } from '../utils/notificationUtils';
+import { useNotifications } from '../hooks/useNotifications';
 
 function ResetPasswordPage() {
   const { resetPassword } = useContext(AuthContext);

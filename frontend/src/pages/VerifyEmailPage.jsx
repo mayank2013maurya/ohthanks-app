@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
-import { useNotifications } from '../utils/notificationUtils';
+import { useNotifications } from '../hooks/useNotifications';
 
 function VerifyEmailPage() {
   const { token } = useParams();
