@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
 
@@ -8,6 +8,7 @@ function VerifyEmailPage() {
   const navigate = useNavigate();
   const [verificationStatus, setVerificationStatus] = useState('verifying'); // 'verifying', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState('');
+  const hasAttemptedVerification = useRef(false);
 
   useEffect(() => {
     const verifyUserEmail = async () => {
@@ -16,6 +17,13 @@ function VerifyEmailPage() {
         setErrorMessage('No verification token provided');
         return;
       }
+
+      // Prevent multiple verification attempts
+      if (hasAttemptedVerification.current) {
+        return;
+      }
+
+      hasAttemptedVerification.current = true;
 
       try {
         await verifyEmail(token);
@@ -32,7 +40,7 @@ function VerifyEmailPage() {
     };
 
     verifyUserEmail();
-  }, [token, verifyEmail, navigate]);
+  }, [token, navigate]); // Removed verifyEmail from dependencies
 
   if (verificationStatus === 'verifying') {
     return (
