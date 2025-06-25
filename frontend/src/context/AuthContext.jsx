@@ -87,7 +87,7 @@ export const AuthProvider = ({ children, notificationFunctions = null }) => {
     const loadingId = showLoading('Creating account...');
     
     try {
-      const response = await axios.post(`${import.meta.env.VITE_REACT_API_URL}/api/auth/register`, {
+      const response = await axios.post(`${import.meta.env.VITE_REACT_API_URL}/api/auth/register`,  {
         name,
         email,
         whatsappNumber,
