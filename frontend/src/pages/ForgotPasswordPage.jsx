@@ -2,22 +2,15 @@ import { useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { Link } from 'react-router-dom';
-import { useNotifications } from '../hooks/useNotifications';
 
 function ForgotPasswordPage() {
   const { forgotPassword } = useContext(AuthContext);
   const { register, handleSubmit, formState: { errors } } = useForm();
-  const { showSuccess, showError, showLoading, removeNotification } = useNotifications();
 
   const onSubmit = async (data) => {
-    const loadingId = showLoading('Sending reset link...');
-    
     try {
       await forgotPassword(data.email);
-      removeNotification(loadingId);
-      showSuccess('Password reset link sent to your email. Please check your inbox and spam folder.');
     } catch (err) {
-      removeNotification(loadingId);
       // Error handling is already done in AuthContext
       console.error('Forgot password error:', err);
     }

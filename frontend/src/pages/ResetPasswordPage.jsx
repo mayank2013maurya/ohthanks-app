@@ -2,16 +2,15 @@ import { useContext, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useNotifications } from '../hooks/useNotifications';
 
 function ResetPasswordPage() {
   const { resetPassword } = useContext(AuthContext);
   const { token } = useParams();
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
   const navigate = useNavigate();
-  const { showSuccess, showError, showLoading, removeNotification } = useNotifications();
   const [isValidToken, setIsValidToken] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Watch password for confirmation validation
   const password = watch('password');
@@ -20,33 +19,30 @@ function ResetPasswordPage() {
     // Validate token format
     if (!token) {
       setIsValidToken(false);
-      showError('No reset token provided. Please use the link from your email.', 'Missing Token');
+      setError('No reset token provided. Please use the link from your email.');
       return;
     }
 
     if (token.length < 10) {
       setIsValidToken(false);
-      showError('Invalid reset link format. Please request a new password reset.', 'Invalid Link Format');
+      setError('Invalid reset link format. Please request a new password reset.');
       return;
     }
-  }, [token, showError]);
+  }, [token]);
 
   const onSubmit = async (data) => {
     if (!isValidToken) {
-      showError('Invalid reset link. Please request a new password reset.', 'Invalid Link');
+      setError('Invalid reset link. Please request a new password reset.');
       return;
     }
     
     setIsLoading(true);
-    const loadingId = showLoading('Resetting password...');
+    setError('');
 
     try {
       await resetPassword(token, data.password);
-      removeNotification(loadingId);
-      showSuccess('Password reset successfully! You can now log in with your new password.');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      removeNotification(loadingId);
       // Error handling is already done in AuthContext
       console.error('Reset password error:', err);
     } finally {
@@ -64,7 +60,7 @@ function ResetPasswordPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <p className="text-red-600 mb-4">The password reset link is invalid or has expired.</p>
+          <p className="text-red-600 mb-4">{error}</p>
           
           <Link 
             to="/forgot-password" 

@@ -1,13 +1,11 @@
 import { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
-import { useNotifications } from '../hooks/useNotifications';
 
 function VerifyEmailPage() {
   const { token } = useParams();
   const { verifyEmail } = useContext(AuthContext);
   const navigate = useNavigate();
-  const { showSuccess, showError, showLoading, removeNotification } = useNotifications();
   const [verificationStatus, setVerificationStatus] = useState('verifying'); // 'verifying', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -19,28 +17,22 @@ function VerifyEmailPage() {
         return;
       }
 
-      const loadingId = showLoading('Verifying your email...');
-
       try {
         await verifyEmail(token);
-        removeNotification(loadingId);
         setVerificationStatus('success');
-        showSuccess('Email verified successfully! You can now log in.');
         
         // Redirect to login after 3 seconds
         setTimeout(() => {
           navigate('/login');
         }, 3000);
       } catch (error) {
-        removeNotification(loadingId);
         setVerificationStatus('error');
         setErrorMessage(error.response?.data?.message || 'Verification failed. Please try again.');
-        showError('Email verification failed. Please try again or contact support.');
       }
     };
 
     verifyUserEmail();
-  }, [token, verifyEmail, navigate, showSuccess, showError, showLoading, removeNotification]);
+  }, [token, verifyEmail, navigate]);
 
   if (verificationStatus === 'verifying') {
     return (
