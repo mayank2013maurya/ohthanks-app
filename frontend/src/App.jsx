@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Notification from './components/Notification';
+import ScrollToTop from './components/ScrollToTop';
 import LandingPage from './pages/LandingPage.jsx';
 import ProductListingPage from './pages/ProductListingPage.jsx';
 import ProductDetailsPage from './pages/ProductDetailsPage.jsx';
@@ -70,6 +71,7 @@ function AppContent() {
       <CartProvider notificationFunctions={notificationHelpers}>
         <WishlistProvider notificationFunctions={notificationHelpers}>
           <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+            <ScrollToTop />
             <Notification />
             <Header />
             <main className="flex-grow">
