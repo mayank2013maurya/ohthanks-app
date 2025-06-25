@@ -53,31 +53,13 @@ if(process.env.NODE_ENV === 'production') {
 }
 
 // Enhanced CORS configuration
+// Simplified CORS configuration for production with reverse proxy
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'https://ohthanks.in',
-      'https://www.ohthanks.in',
-      'http://ohthanks.in',
-      'http://www.ohthanks.in',
-      'http://localhost:5173', // For development
-      'http://localhost:3000'  // For development
-    ];
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      logger.warn('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true, // Allow cookies and authentication headers
+  origin: ['https://ohthanks.in', 'https://www.ohthanks.in'],
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  optionsSuccessStatus: 200
 };
 
 // Middleware

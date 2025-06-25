@@ -4,5 +4,24 @@ ohthanks.in {
 }
 
 api.ohthanks.in {
-    reverse_proxy api:5000
+    encode gzip
+    
+    # Handle CORS preflight requests
+    @options {
+        method OPTIONS
+    }
+    respond @options 200 {
+        header Access-Control-Allow-Origin "https://ohthanks.in"
+        header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+        header Access-Control-Allow-Credentials "true"
+    }
+    
+    # Forward all other requests to the API
+    reverse_proxy api:5000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
 }
