@@ -173,7 +173,7 @@ router.delete('/:id', authMiddleware(['admin']), async (req, res) => {
     if (user.role === 'admin') {
       return res.status(400).json({ message: 'Cannot delete admin users' });
     }
-    await user.remove();
+    await user.deleteOne();
     res.json({ message: 'User deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
